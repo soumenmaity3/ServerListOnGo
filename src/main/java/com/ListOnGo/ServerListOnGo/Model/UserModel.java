@@ -38,4 +38,10 @@ public class UserModel {
 
     private boolean isAdmin=false;
 
+    @Column(nullable = true)
+    private String adminReason;
+
+    @Column(nullable = true)
+    private Integer credit = 0;
+
 }

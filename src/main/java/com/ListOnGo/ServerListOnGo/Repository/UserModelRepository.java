@@ -54,4 +54,27 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
 
     @Query(value = "SELECT * FROM listongo_user WHERE email=:email ",nativeQuery = true)
     Optional<UserModel> findUserEmail(String email);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET is_admin = true, admin_reason = :reason WHERE email = :email",nativeQuery = true)
+    int makeUserAdmin(@Param("email") String email, @Param("reason") String reason);
+
+    @Query(value = "SELECT credit FROM listongo_user WHERE email=:email",nativeQuery = true)
+    int getUserCreditByEmail(String email);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET credit = credit + :credit WHERE email = :email", nativeQuery = true)
+    int buyCredit(String email, Integer credit);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET is_admin = false WHERE email = :email",nativeQuery = true)
+    void demotionAdmin(String email);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET credit = credit - :cost WHERE email = :email", nativeQuery = true)
+    void costCreditByUserEmail(String email, int cost);
 }

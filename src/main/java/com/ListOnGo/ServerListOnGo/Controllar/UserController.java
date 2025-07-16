@@ -3,7 +3,10 @@ package com.ListOnGo.ServerListOnGo.Controllar;
 import com.ListOnGo.ServerListOnGo.Model.LoginUserModel;
 import com.ListOnGo.ServerListOnGo.Model.UserModel;
 import com.ListOnGo.ServerListOnGo.Repository.UserModelRepository;
+import com.ListOnGo.ServerListOnGo.Service.AdminEmailCongService;
+import com.ListOnGo.ServerListOnGo.Service.DemotionEmailService;
 import com.ListOnGo.ServerListOnGo.Service.EmailService;
+import com.ListOnGo.ServerListOnGo.Service.ReqAdminEmailService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -22,6 +26,12 @@ public class UserController {
     UserModelRepository userRepo;
     @Autowired
     EmailService emailService;
+    @Autowired
+    ReqAdminEmailService adminEmail;
+    @Autowired
+    AdminEmailCongService congService;
+    @Autowired
+    DemotionEmailService demotionEmailService;
 
     @GetMapping("user/hello")
     public String hello(){
@@ -84,6 +94,50 @@ public class UserController {
         return new ResponseEntity<>(userId, HttpStatus.OK);
     }
 
+    @GetMapping("user/get-credit")
+    public ResponseEntity<?>usersCredit(@RequestParam("email")String email){
+        try {
+            int coin = userRepo.getUserCreditByEmail(email);
+            if (coin > 0) {
+                return new ResponseEntity<>(coin, HttpStatus.OK);
+//            } else if (coin==0){
+//               boolean isAdmin= userRepo.checkUserAdminOrNotByEmail(email);
+//                if (isAdmin) {
+//                    demotionEmailService.sendEmail(email);
+//
+//                    return new ResponseEntity<>(coin, HttpStatus.BAD_REQUEST);
+//                }else {
+//                    return new ResponseEntity<>("You are not admin",HttpStatus.BAD_REQUEST);
+//                }
+            }else {
+                return new ResponseEntity<>(0,HttpStatus.BAD_REQUEST);
+            }
+        }catch (Exception e){
+            return new ResponseEntity<>("User Not found",HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PutMapping("user/buy-credit")
+    public ResponseEntity<?>buyCredit(@RequestParam("email")String email,@RequestParam("credit")Integer credit){
+      int coin=  userRepo.buyCredit(email,credit);
+      if (coin>0){
+          return new ResponseEntity<>(coin,HttpStatus.OK);
+      }else {
+          return new ResponseEntity<>("Choose One Plane",HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    @PostMapping("user/cost-credit")
+    public ResponseEntity<?>costCredit(@RequestParam("email")String email,@RequestParam("cost")int cost){
+        int coin=userRepo.getUserCreditByEmail(email);
+        if (coin > 0&&cost>0) {
+            userRepo.costCreditByUserEmail(email,cost);
+            return new ResponseEntity<>("Your cost credit is"+cost,HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>("You don't have any credit",HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("/user/user-name")
     public ResponseEntity<?> getUserName(@RequestParam("id") Long id) {
         String userName = userRepo.findUserNameById(id);
@@ -97,6 +151,11 @@ public class UserController {
     public ResponseEntity<?> isAdmin(@RequestParam("email") String email){
         try {
             boolean isAdmin= userRepo.checkUserAdminOrNotByEmail(email);
+            int coin=userRepo.getUserCreditByEmail(email);
+            if (coin == 0) {
+                userRepo.demotionAdmin(email);
+                demotionEmailService.sendEmail(email);
+            }
             return new ResponseEntity<>(isAdmin, HttpStatus.OK);
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -114,16 +173,6 @@ public class UserController {
             return new ResponseEntity<>(e.getMessage(),HttpStatus.BAD_REQUEST);
         }
     }
-
-    @PutMapping("/user/use-otp")
-    public ResponseEntity<?> useOtp(@RequestParam("email") String email) {
-        int rows = userRepo.afterUseOtpUsedOtpFalse(email);
-        if (rows > 0) {
-            return ResponseEntity.ok("OTP marked as used");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found or OTP already used");
-        }
-    }
     @GetMapping("/user/check-otp")
     public ResponseEntity<?> checkOtp(@RequestParam("email") String email,@RequestParam("otp") String otp){
         boolean result=userRepo.checkOtpByEmail(email,otp);
@@ -134,6 +183,15 @@ public class UserController {
         }
     }
 
+    @PutMapping("/user/use-otp")
+    public ResponseEntity<?> useOtp(@RequestParam("email") String email) {
+        int rows = userRepo.afterUseOtpUsedOtpFalse(email);
+        if (rows > 0) {
+            return ResponseEntity.ok("OTP marked as used");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found or OTP already used");
+        }
+    }
 
     @PutMapping("/user/reset-pass")
     public ResponseEntity<?> resetPass(@RequestParam("email") String email,
@@ -176,6 +234,37 @@ public class UserController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @GetMapping("user/send-link")
+    public ResponseEntity<?>sendAdminLink(@RequestParam("email")String email){
 
+        try {
+            adminEmail.sendMail(email);
+            return new ResponseEntity<>("Done",HttpStatus.OK);
+        } catch (MessagingException e) {
+            return new ResponseEntity<>("Network Slow",HttpStatus.OK);
+        }
+    }
+
+    @PutMapping("/user/request-admin")
+    public ResponseEntity<?> approveUserAsAdmin(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String reason = payload.getOrDefault("reason", "No reason provided");
+        int updated = userRepo.makeUserAdmin(email, reason);
+        if (updated > 0) {
+            return new ResponseEntity<>("User promoted to admin successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found or already an admin", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("user/admin-email")
+    public ResponseEntity<?>adminEmail(@RequestParam("email")String email){
+        try {
+            congService.sendOtp(email);
+            return new ResponseEntity<>("Congratulation",HttpStatus.OK);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
