@@ -1,5 +1,6 @@
 package com.ListOnGo.ServerListOnGo.Repository;
 
+import com.ListOnGo.ServerListOnGo.Model.RequestedForAdminUserDTO;
 import com.ListOnGo.ServerListOnGo.Model.UserModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -55,11 +56,6 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
     @Query(value = "SELECT * FROM listongo_user WHERE email=:email ",nativeQuery = true)
     Optional<UserModel> findUserEmail(String email);
 
-    @Modifying
-    @Transactional
-    @Query(value = "UPDATE listongo_user SET is_admin = true, admin_reason = :reason WHERE email = :email",nativeQuery = true)
-    int makeUserAdmin(@Param("email") String email, @Param("reason") String reason);
-
     @Query(value = "SELECT credit FROM listongo_user WHERE email=:email",nativeQuery = true)
     int getUserCreditByEmail(String email);
 
@@ -77,4 +73,23 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
     @Transactional
     @Query(value = "UPDATE listongo_user SET credit = credit - :cost WHERE email = :email", nativeQuery = true)
     void costCreditByUserEmail(String email, int cost);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET admin_reason=:reason, req_done ='approved', is_admin = true,approve_by=:adEmail WHERE email = :userEmail",nativeQuery = true)
+    int makeUserAdmin(@Param("adEmail") String adEmail,@Param("userEmail") String userEmail,@Param("reason")String reason);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET req_done ='requested', admin_reason = :reason WHERE email = :email",nativeQuery = true)
+    int reqUserAdmin(String email, String reason);
+
+    @Modifying
+    @Transactional
+    @Query(value = "SELECT id,email,admin_reason FROM listongo_user WHERE req_done = 'requested'",nativeQuery = true)
+    List<RequestedForAdminUserDTO> pendingRequest();
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE listongo_user SET approve_by=:adEmail,req_done ='cancel', admin_reason = :reason WHERE email = :userEmail",nativeQuery = true)
+    void denyAdminRequest(String adEmail,String userEmail,String reason);
 }

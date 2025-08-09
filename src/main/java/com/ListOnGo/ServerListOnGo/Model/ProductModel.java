@@ -21,7 +21,7 @@ public class ProductModel {
     @Column(nullable = true,name = "nick_name")
     private String nickName;
     @Column(nullable = true,name = "who_admin")
-    private Long whoAdmin;
+    private String whoAdmin;
 
     private String imageName;
     private String imageType;

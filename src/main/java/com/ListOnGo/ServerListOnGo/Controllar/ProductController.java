@@ -56,6 +56,16 @@ public class ProductController {
     }
     }
 
+    @GetMapping("product/keyword")
+    public ResponseEntity<?>searchKeyword(@RequestParam("keyword") String keyword){
+        try{
+          List<ProductDTO> product=  productRepo.searchProductByKeyword(keyword);
+            return new ResponseEntity<>(product,HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>("Error",HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("/product/get-all-product")
     public ResponseEntity<List<ProductDTO>> getAllProduct() {
         List<ProductModel> approvedProducts = productRepo.findByIsAdminApproveTrue();  // Only approved products
@@ -119,10 +129,10 @@ public class ProductController {
     }
 
     @PutMapping("/product/make-for-user")
-    public ResponseEntity<?>forUser(@RequestParam("imaId") Long imaId,@RequestParam("adminId")Long adminID){
+    public ResponseEntity<?>forUser(@RequestParam("imaId") Long imaId,@RequestParam("adminEmail")String adminEmail){
         try {
            int result= productRepo.makeFalseToTrue(imaId);
-           int approveBy=productRepo.makeApproveAdmin(imaId,adminID);
+           int approveBy=productRepo.makeApproveAdmin(imaId,adminEmail);
            if (result>0&&approveBy>0){
                return new ResponseEntity<>("done",HttpStatus.OK);
            }else {
@@ -134,9 +144,9 @@ public class ProductController {
         }
     }
 
-    @GetMapping("product/approve/{id}")
-    public ResponseEntity<?> approve(@PathVariable("id") Long userId){
-        List<ProductModel> approveProduct=productRepo.findAllForAdminSpecific(userId);
+    @GetMapping("product/approve/{Email}")
+    public ResponseEntity<?> approve(@PathVariable("Email") String userEmail){
+        List<ProductModel> approveProduct=productRepo.findAllForAdminSpecific(userEmail);
         List<ProductDTO> dtoList = approveProduct.stream()
                 .map(product -> new ProductDTO(
                         product.getId(),

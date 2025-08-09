@@ -41,6 +41,11 @@ public class UserModel {
     @Column(nullable = true)
     private String adminReason;
 
+    private String reqDone;
+
+    @Column(name = "approve_by",nullable = true)
+    private String approveBy;
+
     @Column(nullable = true)
     private Integer credit = 0;
 
