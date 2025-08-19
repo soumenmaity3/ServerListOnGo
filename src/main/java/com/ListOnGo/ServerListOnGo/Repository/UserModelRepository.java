@@ -92,4 +92,7 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
     @Transactional
     @Query(value = "UPDATE listongo_user SET approve_by=:adEmail,req_done ='cancel', admin_reason = :reason WHERE email = :userEmail",nativeQuery = true)
     void denyAdminRequest(String adEmail,String userEmail,String reason);
+
+    @Query(value = "SELECT req_done FROM listongo_user WHERE email=:email",nativeQuery = true)
+    String checkStatus(String email);
 }
