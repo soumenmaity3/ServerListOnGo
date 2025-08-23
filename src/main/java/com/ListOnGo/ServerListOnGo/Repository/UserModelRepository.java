@@ -95,4 +95,7 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
 
     @Query(value = "SELECT req_done FROM listongo_user WHERE email=:email",nativeQuery = true)
     String checkStatus(String email);
+
+    @Query(value = "SELECT * FROM listongo_user WHERE approve_by =:email",nativeQuery = true)
+    List<UserModel> approveByYouUser(String email);
 }

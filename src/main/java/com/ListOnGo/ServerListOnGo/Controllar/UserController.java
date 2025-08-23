@@ -310,4 +310,10 @@ public class UserController {
         String admin_req_status = userRepo.checkStatus(email);
         return new ResponseEntity<>(admin_req_status, HttpStatus.OK);
     }
+
+    @GetMapping("user/admin-approve-by-/{email}")
+    public ResponseEntity<?> approveByThis(@PathVariable("email") String email){
+        List<UserModel> approveUser=userRepo.approveByYouUser(email);
+        return new ResponseEntity<>(approveUser,HttpStatus.OK);
+    }
 }
