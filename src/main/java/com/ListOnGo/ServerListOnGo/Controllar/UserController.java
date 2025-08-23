@@ -154,7 +154,7 @@ public class UserController {
     @GetMapping("/user/isAdmin")
     public ResponseEntity<?> isAdmin(@RequestParam("email") String email) {
         try {
-            boolean isAdmin = userRepo.checkUserAdminOrNotByEmail(email);
+            Boolean isAdmin = userRepo.checkUserAdminOrNotByEmail(email);
             int coin = userRepo.getUserCreditByEmail(email);
             if (coin == 0) {
                 userService.demotion(email);

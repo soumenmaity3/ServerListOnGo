@@ -22,7 +22,7 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
     String findUserNameById(long id);
 
     @Query(value = "SELECT is_admin FROM listongo_user  WHERE email=:email",nativeQuery = true)
-    boolean checkUserAdminOrNotByEmail(String email);
+    Boolean checkUserAdminOrNotByEmail(String email);
 
     @Modifying
     @Transactional
@@ -66,7 +66,7 @@ public interface UserModelRepository extends JpaRepository<UserModel,Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE listongo_user SET is_admin = false WHERE email = :email",nativeQuery = true)
+    @Query(value = "UPDATE listongo_user SET is_admin = false , req_done='null' WHERE email = :email",nativeQuery = true)
     void demotionAdmin(String email);
 
     @Modifying

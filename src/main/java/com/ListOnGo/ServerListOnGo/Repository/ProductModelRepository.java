@@ -59,5 +59,6 @@ public interface ProductModelRepository extends JpaRepository<ProductModel,Long>
     List<ProductDTO> searchProductByKeyword(@Param("keyword") String keyword);
 
 
-
+    @Query(value = "SELECT * FROM listongo_product WHERE added_by_user_id=:id",nativeQuery = true)
+    List<ProductModel> addByHimProduct(Long id);
 }

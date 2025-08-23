@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @CrossOrigin("*")
 public class ProductController {
     ApiLink api=new ApiLink();
-//    String url_forImage="http://192.168.111.150:8080/api/list-on-go";
     String link=api.apiUrl();
     @Autowired
     ProductModelRepository productRepo;
@@ -194,4 +193,10 @@ public class ProductController {
         }
     }
 
+    @GetMapping("product/by/{id}")
+    public ResponseEntity<?> addByHim(@PathVariable("id") Long id){
+
+        List<ProductModel> addProduct = productRepo.addByHimProduct(id);
+            return new ResponseEntity<>(addProduct, HttpStatus.OK);
+    }
 }
