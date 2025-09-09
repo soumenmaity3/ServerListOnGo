@@ -116,8 +116,8 @@ public class UserController {
                 return ResponseEntity.badRequest().body(0); // or null if you prefer
             }
             try {
-                int coin = userRepo.buyCredit(email, credit);
-                if (coin > 0) {
+                if (credit > 0) {
+                    userRepo.buyCredit(email, credit);
                     buyCredit.sendCreditMessage(email, String.valueOf(credit));
                     return ResponseEntity.ok(credit);
                 } else {
